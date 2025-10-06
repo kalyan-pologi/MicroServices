@@ -1,0 +1,71 @@
+-------------------------------DEPENDENCIES--------------------------------
+Core Spring Boot
+spring-boot-starter-web → REST API with embedded Tomcat/Jetty/Undertow
+spring-boot-starter-webflux → Reactive web applications (Netty-based)
+spring-boot-starter-actuator → Health checks, monitoring, metrics
+spring-boot-starter-aop → Aspect-Oriented Programming (AOP) support
+spring-boot-starter-validation → Request/response validation (JSR 380/Bean Validation)
+spring-boot-starter-test → Unit & integration testing (JUnit, Mockito, etc.)
+spring-boot-starter-log4j2 → Logging with Log4j2
+
+🗄️ Data Access & Persistence
+spring-boot-starter-data-jpa → JPA/Hibernate + relational databases
+spring-boot-starter-data-rest → Expose repositories directly as REST APIs
+spring-boot-starter-data-mongodb → MongoDB support
+spring-boot-starter-data-redis → Redis support
+mysql-connector-java → MySQL driver
+postgresql → PostgreSQL driver
+
+⚡ Messaging & Streaming
+spring-kafka → Apache Kafka support
+spring-boot-starter-amqp → RabbitMQ support
+spring-data-redis → Redis pub-sub (beyond caching)
+
+💾 Caching
+spring-boot-starter-cache → Spring caching abstraction
+caffeine → High-performance in-memory caching
+hazelcast → Distributed in-memory caching
+
+☁️ Spring Cloud (Microservices Essentials)
+spring-cloud-starter-netflix-eureka-server → Eureka Service Registry
+spring-cloud-starter-netflix-eureka-client → Eureka Discovery Client
+spring-cloud-starter-gateway → API Gateway (Spring Cloud Gateway)
+spring-cloud-starter-openfeign → Declarative REST client
+spring-cloud-starter-loadbalancer → Client-side load balancing (replaces Ribbon)
+spring-cloud-starter-config → Config Client
+spring-cloud-config-server → Config Server
+spring-cloud-starter-bus-amqp → Distributed config refresh via RabbitMQ
+spring-cloud-starter-bus-kafka → Distributed config refresh via Kafka
+
+🔐 Security & Authentication
+spring-boot-starter-security → Authentication & authorization
+spring-security-jwt → JWT support (legacy)
+spring-boot-starter-oauth2-client → OAuth2 client support
+spring-boot-starter-oauth2-resource-server → OAuth2 resource server (JWT)
+spring-security-oauth2-jose → JWT (JSON Web Token) support
+spring-security-oauth2-client → OAuth2 client
+spring-security-oauth2-resource-server → OAuth2 resource server
+spring-security-oauth2 → OAuth2 support (legacy)
+
+
+🔄 Resilience & Fault Tolerance
+spring-cloud-starter-circuitbreaker-resilience4j → Circuit breaker, retries, rate limiting
+resilience4j-spring-boot2 → Resilience4j integration with Spring Boot
+resilience4j-micrometer → Metrics for Resilience4j
+resilience4j-spring-cloud2 → Resilience4j Spring Cloud integration
+
+📊 Observability & Monitoring
+spring-cloud-starter-sleuth → Distributed tracing (traceId, spanId)
+spring-cloud-starter-zipkin → Zipkin tracing integration
+micrometer-registry-prometheus → Prometheus metrics export
+spring-boot-admin-starter-server → Spring Boot Admin dashboard
+spring-boot-admin-starter-client → Register microservices with Boot Admin
+
+🎨 Frontend / API Styles
+spring-boot-starter-thymeleaf → Server-side HTML templates (Thymeleaf)
+spring-boot-starter-graphql → GraphQL support
+
+🔧 Developer Productivity
+spring-boot-devtools → Hot reload for faster development
+lombok → Boilerplate reduction (@Getter, @Setter, etc.)
+mapstruct → DTO ↔ Entity mapping
