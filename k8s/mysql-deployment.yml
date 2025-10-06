@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: mysql-db
-          image: mysql:8.0
+          image: <DOCKER_USER>/mysql:8.0
           env:
             - name: MYSQL_ROOT_PASSWORD
               value: root

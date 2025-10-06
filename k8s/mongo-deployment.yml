@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: mongo
-          image: mongo:7
+          image: <DOCKER_USER>/mongo:7
           ports:
             - containerPort: 27017
           volumeMounts:

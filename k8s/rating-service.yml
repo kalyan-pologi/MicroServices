@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: rating-service
-          image: rating-service:latest
+          image: <DOCKER_USER>/rating-service:latest
           ports:
             - containerPort: 8083
           env:

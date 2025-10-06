@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: service-registry
-          image: service-registry:latest
+          image: <DOCKER_USER>/service-registry:latest
           ports:
             - containerPort: 8761
           env:

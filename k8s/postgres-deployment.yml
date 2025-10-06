@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: postgres-db
-          image: postgres:15
+          image: <DOCKER_USER>/postgres:15
           env:
             - name: POSTGRES_PASSWORD
               value: root

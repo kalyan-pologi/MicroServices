@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: hotel-service
-          image: hotel-service:latest
+          image: <DOCKER_USER>/hotel-service:latest
           ports:
             - containerPort: 8082
           env:
