@@ -6,11 +6,6 @@ on:
   pull_request:
     branches: [ "main" ]
   workflow_dispatch:   # allows manual trigger
-    inputs:
-      stage:
-        description: "Optional: run specific stage (build/push/deploy)"
-        required: false
-        default: "all"
 
 jobs:
   # ==================== 1. BUILD & TEST ====================
@@ -35,7 +30,7 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-maven-
 
-    - name: Build & test microservices
+    - name: Build & test all microservices
       run: |
         mvn -B clean verify --file userService/pom.xml
         mvn -B clean verify --file hotelService/pom.xml
@@ -56,17 +51,26 @@ jobs:
           ApiGateway/target/*.jar
           serviceRegistry/target/*.jar
 
-  # ==================== 2. DOCKER PUSH ====================
+  # ==================== 2. DOCKER BUILD & PUSH ====================
   push:
     runs-on: ubuntu-latest
-    needs: build   # runs only if build succeeds
+    needs: build
 
     steps:
+    # ✅ Bring back source code so Dockerfiles exist
+    - name: Checkout source
+      uses: actions/checkout@v4
+
+    # ✅ Download previously built JARs
     - name: Download built JARs
       uses: actions/download-artifact@v4
       with:
         name: built-jars
-        path: ./artifacts
+        path: .
+
+    # (Optional) Debug: List downloaded JARs
+    - name: Verify downloaded JARs
+      run: ls -R | grep .jar || echo "No JARs found"
 
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v3
@@ -77,15 +81,9 @@ jobs:
         username: ${{ secrets.DOCKER_USER }}
         password: ${{ secrets.DOCKER_PASS }}
 
+    # ✅ Build Docker images for all services
     - name: Build Docker images
       run: |
-        cp ./artifacts/*.jar userService/target/ || true
-        cp ./artifacts/*.jar hotelService/target/ || true
-        cp ./artifacts/*.jar RatingService/target/ || true
-        cp ./artifacts/*.jar ConfigServer/target/ || true
-        cp ./artifacts/*.jar ApiGateway/target/ || true
-        cp ./artifacts/*.jar serviceRegistry/target/ || true
-
         docker build -t ${{ secrets.DOCKER_USER }}/user-service:latest userService
         docker build -t ${{ secrets.DOCKER_USER }}/hotel-service:latest hotelService
         docker build -t ${{ secrets.DOCKER_USER }}/rating-service:latest RatingService
@@ -93,6 +91,7 @@ jobs:
         docker build -t ${{ secrets.DOCKER_USER }}/api-gateway:latest ApiGateway
         docker build -t ${{ secrets.DOCKER_USER }}/service-registry:latest serviceRegistry
 
+    # ✅ Push images to Docker Hub
     - name: Push Docker images
       run: |
         docker push ${{ secrets.DOCKER_USER }}/user-service:latest
@@ -105,7 +104,7 @@ jobs:
   # ==================== 3. DEPLOY TO KUBERNETES ====================
   deploy:
     runs-on: ubuntu-latest
-    needs: push   # runs only if push job succeeds
+    needs: push
 
     steps:
     - name: Checkout repo
@@ -131,5 +130,6 @@ jobs:
     - name: Deploy to Kubernetes
       run: |
         for file in patched-k8s/*.yml; do
+          echo "Applying $file"
           kubectl apply -f "$file"
         done
