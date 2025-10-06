@@ -1,0 +1,7 @@
+spring:
+  cloud:
+    config:
+      enabled: false    # disables config client only for tests
+  datasource:
+    url: jdbc:h2:mem:testdb   # in‑memory DB for unit tests
+    driver-class-name: org.h2.Driver
