@@ -1,0 +1,180 @@
+version: "3.9"
+
+services:
+  # ==================== CONFIG SERVER ====================
+  config-server:
+    build: ./configServer
+    container_name: config-server
+    ports:
+      - "8085:8085"
+    networks:
+      - micro-net
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8085/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  # ==================== SERVICE REGISTRY (EUREKA) ====================
+  service-registry:
+    build: ./serviceRegistry
+    container_name: service-registry
+    ports:
+      - "8761:8761"
+    depends_on:
+      config-server:
+        condition: service_healthy
+    environment:
+      SPRING_CLOUD_CONFIG_URI: http://config-server:8085
+    networks:
+      - micro-net
+
+  # ==================== MYSQL (for USER-SERVICE) ====================
+  mysql-db:
+    image: mysql:8.0
+    container_name: mysql-db
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: microservices
+    ports:
+      - "3306:3306"
+    networks:
+      - micro-net
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -uroot -proot || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  # ==================== POSTGRES (for HOTEL-SERVICE) ====================
+  postgres-db:
+    image: postgres:15
+    container_name: postgres-db
+    environment:
+      POSTGRES_PASSWORD: root
+      POSTGRES_DB: microservices
+    ports:
+      - "5433:5432"
+    networks:
+      - micro-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  # ==================== MONGODB (for RATING-SERVICE) ====================
+  mongo-db:
+    image: mongo:7
+    container_name: mongo-db
+    ports:
+      - "27018:27017"
+    networks:
+      - micro-net
+    healthcheck:
+      test: ["CMD-SHELL", "mongosh --eval 'db.adminCommand(\"ping\").ok' || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+
+  # ==================== ZIPKIN ====================
+  zipkin:
+    image: openzipkin/zipkin
+    container_name: zipkin
+    ports:
+      - "9411:9411"
+    networks:
+      - micro-net
+
+  # ==================== USER SERVICE ====================
+  user-service:
+    build: ./userService
+    container_name: user-service
+    ports:
+      - "8081:8081"
+    depends_on:
+      config-server:
+        condition: service_healthy
+      service-registry:
+        condition: service_started
+      mysql-db:
+        condition: service_healthy
+    environment:
+      SPRING_CLOUD_CONFIG_URI: http://config-server:8085
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://service-registry:8761/eureka/
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-db:3306/microservices
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: root
+    networks:
+      - micro-net
+
+  # ==================== HOTEL SERVICE ====================
+  hotel-service:
+    build: ./hotelService
+    container_name: hotel-service
+    ports:
+      - "8082:8082"
+    depends_on:
+      config-server:
+        condition: service_healthy
+      service-registry:
+        condition: service_started
+      postgres-db:
+        condition: service_healthy
+    environment:
+      SPRING_CLOUD_CONFIG_URI: http://config-server:8085
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://service-registry:8761/eureka/
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-db:5432/microservices
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: root
+    networks:
+      - micro-net
+
+  # ==================== RATING SERVICE ====================
+  rating-service:
+    build: ./ratingService
+    container_name: rating-service
+    ports:
+      - "8083:8083"
+    depends_on:
+      config-server:
+        condition: service_healthy
+      service-registry:
+        condition: service_started
+      mongo-db:
+        condition: service_healthy
+    environment:
+      SPRING_CLOUD_CONFIG_URI: http://config-server:8085
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://service-registry:8761/eureka/
+      SPRING_DATA_MONGODB_URI: mongodb://mongo-db:27017/microservices
+    networks:
+      - micro-net
+
+  # ==================== API GATEWAY ====================
+  api-gateway:
+    build: ./apiGateway
+    container_name: api-gateway
+    ports:
+      - "8084:8084"
+    depends_on:
+      config-server:
+        condition: service_healthy
+      service-registry:
+        condition: service_started
+      user-service:
+        condition: service_started
+      hotel-service:
+        condition: service_started
+      rating-service:
+        condition: service_started
+    environment:
+      SPRING_CLOUD_CONFIG_URI: http://config-server:8085
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://service-registry:8761/eureka/
+    networks:
+      - micro-net
+
+# ==================== NETWORK ====================
+networks:
+  micro-net:
+    driver: bridge

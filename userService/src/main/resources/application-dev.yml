@@ -1,0 +1,163 @@
+server:
+  port: 8081
+
+spring:
+  application:
+    name: USER-SERVICE
+  config:
+    import: "configserver:"
+  cloud:
+    config:
+      uri: http://localhost:8085
+      fail-fast: true
+      retry:
+        initial-interval: 2000
+        multiplier: 1.5
+        max-interval: 10000
+        max-attempts: 10
+
+  datasource:
+    url: jdbc:mysql://localhost:3306/microservices
+    username: root
+    password: root
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQL8Dialect
+        format_sql: true
+        session:
+          events:
+            log:
+              enabled: true
+              LOG_QUERIES_SLOWER_THAN_MS: 50   # log queries slower than 50 ms
+    # HikariCP settings
+    hikari:
+      minimum-idle: 2               # Min idle connections in pool (default 10)
+      maximum-pool-size: 10         # Max total connections (default 10)
+      idle-timeout: 30000           # 30 sec idle timeout
+      connection-timeout: 20000     # Max time to wait for a connection (20s)
+      validation-timeout: 5000      # Time to wait for validation (5s)
+      max-lifetime: 1800000         # 30 mins, closes stale connections
+      pool-name: MyHikariPool
+
+# resilience4J configuration
+management:
+  health:
+    circuitbreakers:
+      enabled: true
+  endpoints:
+    web:
+      exposure:
+        include:
+          - health
+          - info
+          - metrics
+          - prometheus
+          - env
+          - beans
+          - loggers
+          - mappings
+          - threaddump
+          - configprops
+          - startup
+
+  endpoint:
+    health:
+      show-details: always
+
+resilience4j:
+  circuitbreaker:
+    instances:
+      ratingHotelBeaker:
+        registerHealthIndicator: true
+        eventConsumerBufferSize: 10
+        failureRateThreshold: 50
+        minimumNumberOfCalls: 5
+        automaticTransitionFromOpenToHalfOpenEnabled: true
+        waitDurationInOpenState: 6s
+        permittedNumberOfCallsInHalfOpenState: 3
+        slidingWindowSize: 10
+        slidingWindowType: COUNT_BASED
+
+    global:
+      ignoreExceptions:
+        - com.microservices.user.ResourceNotFoundException
+
+
+  retry:
+    instances:
+      ratingHotelService:
+        max-attempts: 3
+        wait-duration: 5s
+
+  ratelimiter:
+    instances:
+      userRateLimiter:
+        limit-refresh-period: 4s
+        limit-for-period: 2
+        timeout-duration: 2s
+
+  timelimiter:
+    instances:
+      userTimeLimiter:
+        timeout-duration: 10s
+        cancel-running-future: true
+
+  #
+  #okta:
+  #  oauth2:
+  #    issuer: https://dev-77584981.okta.com/oauth2/default
+  #    audience: api://default
+
+  ## lazy initialization
+  main:
+    lazy-initialization: true
+
+#debug: true
+
+logging:
+  pattern:
+    level: "%5p [${spring.application.name:},traceId=%X{traceId:-},spanId=%X{spanId:-}]"
+
+#    root: INFO
+#    com.myapp: DEBUG
+#    org.hibernate.SQL: TRACE       # Show SQL queries
+#    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+#    org.hibernate.stat: DEBUG
+#    org.springframework.web: INFO
+#    org.springframework.security: DEBUG
+#    org.springframework.cloud: DEBUG
+#    com.zaxxer.hikari: DEBUG       # HikariCP logs
+#    io.github.resilience4j: DEBUG  # Resilience4j logs
+
+
+#conditional on property example
+feature:
+  api:
+    enabled: true
+
+# Wrap your scheduled method so it only runs if a property is enabled:
+jobs:
+  cleanup:
+    enabled: false
+
+  # we can control whether scheduling is enabled at all.
+  task:
+    scheduling:
+      enabled: false
+
+  # tracing configuration
+  tracing:
+    enabled: true
+    sampling:
+      probability: 1.0   # 100% sampling for local/dev (reduce in prod)
+
+## Send traces to Zipkin
+#zipkin:
+#  tracing:
+#    endpoint: http://localhost:9411/api/v2/spans

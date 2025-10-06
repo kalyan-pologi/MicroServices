@@ -1,0 +1,44 @@
+server:
+  port: 8084
+
+spring:
+  application:
+    name: API-GATEWAY
+  config:
+    import: "configserver:"
+  cloud:
+    config:
+      uri: http://config-server:8085
+      fail-fast: true
+      retry:
+        initial-interval: 2000
+        multiplier: 1.5
+        max-interval: 10000
+        max-attempts: 10
+    gateway:
+      routes:
+        - id: USER-SERVICE
+          uri: lb://USER-SERVICE
+          predicates:
+            - Path=/users/**
+        - id: HOTEL-SERVICE
+          uri: lb://HOTEL-SERVICE
+          predicates:
+            - Path=/hotels/**, /staffs/**
+        - id: RATING-SERVICE
+          uri: lb://RATING-SERVICE
+          predicates:
+            - Path=/ratings/**
+
+  jackson:
+    default-property-inclusion: non_null
+
+springdoc:
+  swagger-ui:
+    urls:
+      - name: user-service
+        url: /USER-SERVICE/v3/api-docs
+      - name: hotel-service
+        url: /HOTEL-SERVICE/v3/api-docs
+      - name: rating-service
+        url: /RATING-SERVICE/v3/api-docs

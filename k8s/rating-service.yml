@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rating-service
+  namespace: microservices
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: rating-service
+  template:
+    metadata:
+      labels:
+        app: rating-service
+    spec:
+      containers:
+        - name: rating-service
+          image: rating-service:latest
+          ports:
+            - containerPort: 8083
+          env:
+            - name: SPRING_CLOUD_CONFIG_URI
+              value: http://config-server:8085
+            - name: EUREKA_CLIENT_SERVICEURL_DEFAULTZONE
+              value: http://service-registry:8761/eureka/
+            - name: SPRING_DATA_MONGODB_URI
+              value: mongodb://mongo-db:27017/microservices
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: rating-service
+  namespace: microservices
+spec:
+  selector:
+    app: rating-service
+  ports:
+    - port: 8083
+  type: ClusterIP

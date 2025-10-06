@@ -1,0 +1,21 @@
+server:
+  port: 8083
+
+spring:
+  application:
+    name: RATING-SERVICE
+  config:
+    import: "configserver:"
+  cloud:
+    config:
+      uri: http://config-server:8085
+      fail-fast: true
+      retry:
+        initial-interval: 2000
+        multiplier: 1.5
+        max-interval: 10000
+        max-attempts: 10
+
+  data:
+    mongodb:
+      uri: mongodb://mongo-db:27017/microservices

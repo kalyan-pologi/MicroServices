@@ -1,0 +1,6 @@
+spring:
+  application:
+    name: config-server
+  profiles:
+    active: dev          # switch to docker or k8s as needed
+

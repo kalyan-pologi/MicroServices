@@ -1,0 +1,27 @@
+server:
+  port: 8083
+
+spring:
+  application:
+    name: RATING-SERVICE
+  config:
+    import: "configserver:"
+  cloud:
+    config:
+      uri: http://localhost:8085
+      fail-fast: true
+      retry:
+        initial-interval: 2000
+        multiplier: 1.5
+        max-interval: 10000
+        max-attempts: 10
+
+  data:
+    mongodb:
+      uri: mongodb://localhost:27017/microservices
+
+management:
+  tracing:
+    enabled: true
+  zipkin:
+    endpoint: http://localhost:9411/api/v2/spans
