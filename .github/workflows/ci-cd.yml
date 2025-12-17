@@ -1,0 +1,135 @@
+name: Microservices CI/CD Pipeline (3-Stage)
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+  workflow_dispatch:   # allows manual trigger
+
+jobs:
+  # ==================== 1. BUILD & TEST ====================
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout source
+      uses: actions/checkout@v4
+
+    - name: Set up JDK 17
+      uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+
+    - name: Cache Maven dependencies
+      uses: actions/cache@v4
+      with:
+        path: ~/.m2/repository
+        key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+        restore-keys: |
+          ${{ runner.os }}-maven-
+
+    - name: Build & test all microservices
+      run: |
+        mvn -B clean verify --file userService/pom.xml
+        mvn -B clean verify --file hotelService/pom.xml
+        mvn -B clean verify --file RatingService/pom.xml
+        mvn -B clean verify --file ConfigServer/pom.xml
+        mvn -B clean verify --file ApiGateway/pom.xml
+        mvn -B clean verify --file serviceRegistry/pom.xml
+
+    - name: Upload built JARs as artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: built-jars
+        path: |
+          userService/target/*.jar
+          hotelService/target/*.jar
+          RatingService/target/*.jar
+          ConfigServer/target/*.jar
+          ApiGateway/target/*.jar
+          serviceRegistry/target/*.jar
+
+  # ==================== 2. DOCKER BUILD & PUSH ====================
+  push:
+    runs-on: ubuntu-latest
+    needs: build
+
+    steps:
+    # ✅ Bring back source code so Dockerfiles exist
+    - name: Checkout source
+      uses: actions/checkout@v4
+
+    # ✅ Download previously built JARs
+    - name: Download built JARs
+      uses: actions/download-artifact@v4
+      with:
+        name: built-jars
+        path: .
+
+    # (Optional) Debug: List downloaded JARs
+    - name: Verify downloaded JARs
+      run: ls -R | grep .jar || echo "No JARs found"
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Docker Hub login
+      uses: docker/login-action@v3
+      with:
+        username: ${{ secrets.DOCKER_USER }}
+        password: ${{ secrets.DOCKER_PASS }}
+
+    # ✅ Build Docker images for all services
+    - name: Build Docker images
+      run: |
+        docker build -t ${{ secrets.DOCKER_USER }}/user-service:latest userService
+        docker build -t ${{ secrets.DOCKER_USER }}/hotel-service:latest hotelService
+        docker build -t ${{ secrets.DOCKER_USER }}/rating-service:latest RatingService
+        docker build -t ${{ secrets.DOCKER_USER }}/config-server:latest ConfigServer
+        docker build -t ${{ secrets.DOCKER_USER }}/api-gateway:latest ApiGateway
+        docker build -t ${{ secrets.DOCKER_USER }}/service-registry:latest serviceRegistry
+
+    # ✅ Push images to Docker Hub
+    - name: Push Docker images
+      run: |
+        docker push ${{ secrets.DOCKER_USER }}/user-service:latest
+        docker push ${{ secrets.DOCKER_USER }}/hotel-service:latest
+        docker push ${{ secrets.DOCKER_USER }}/rating-service:latest
+        docker push ${{ secrets.DOCKER_USER }}/config-server:latest
+        docker push ${{ secrets.DOCKER_USER }}/api-gateway:latest
+        docker push ${{ secrets.DOCKER_USER }}/service-registry:latest
+
+  # ==================== 3. DEPLOY TO KUBERNETES ====================
+  deploy:
+    runs-on: ubuntu-latest
+    needs: push
+
+    steps:
+    - name: Checkout repo
+      uses: actions/checkout@v4
+
+    - name: Set up kubectl
+      uses: azure/setup-kubectl@v4
+      with:
+        version: 'latest'
+
+    - name: Configure kubeconfig
+      run: |
+        mkdir -p $HOME/.kube
+        echo "${{ secrets.KUBE_CONFIG }}" > $HOME/.kube/config
+
+    - name: Replace <DOCKER_USER> in Kubernetes YAMLs
+      run: |
+        mkdir patched-k8s
+        for file in k8s/*.yml; do
+          sed "s|<DOCKER_USER>|${{ secrets.DOCKER_USER }}|g" "$file" > "patched-k8s/$(basename $file)"
+        done
+
+    - name: Deploy to Kubernetes
+      run: |
+        for file in patched-k8s/*.yml; do
+          echo "Applying $file"
+          kubectl apply -f "$file"
+        done
