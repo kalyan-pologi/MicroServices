@@ -20,7 +20,7 @@ pipeline {
             }
         }
 
-        stage('Build serviceRegistry') {
+        stage('Build service Registry') {
             steps {
                 bat '''
                     cd serviceRegistry
