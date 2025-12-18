@@ -27,10 +27,10 @@ public class JacksonDto {
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")  // Format date output
     private LocalDateTime registeredAt;
 
-    @JsonView(Views.Public.class)
+    @JsonView(JacksonViews.Public.class)
     private String email;
 
-    @JsonView(Views.Admin.class)
+    @JsonView(JacksonViews.Admin.class)
     private String internalNotes;
 
     @JsonSerialize(using = CustomStatusSerializer.class) // Use custom serializer

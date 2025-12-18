@@ -1,4 +1,4 @@
-package com.microservices.user.config;
+package com.microservices.user.utils;
 
 import org.springframework.cloud.client.loadbalancer.LoadBalanced;
 import org.springframework.context.annotation.Bean;
@@ -6,7 +6,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.web.client.RestTemplate;
 
 @Configuration
-public class MyConfig {
+public class RestTemplateConfig {
 
     // To use restTemplate as autowired we need to create Bean for it
     @Bean

@@ -1,4 +1,4 @@
 package com.microservices.user.utils;
 
-public class MyService {
+public class ConditionalClient {
 }

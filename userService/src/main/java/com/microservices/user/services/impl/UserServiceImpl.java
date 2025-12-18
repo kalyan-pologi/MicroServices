@@ -12,6 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -19,7 +20,15 @@ import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.multipart.MultipartFile;
+import software.amazon.awssdk.core.ResponseBytes;
+import software.amazon.awssdk.core.sync.RequestBody;
+import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.GetObjectRequest;
+import software.amazon.awssdk.services.s3.model.GetObjectResponse;
+import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 
+import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -38,6 +47,13 @@ public class UserServiceImpl implements UserService {
     // Use to implement with feign client
     @Autowired
     private HotelService hotelService;
+
+    @Autowired
+    private S3Client s3Client;
+
+    @Value("${aws.bucket.name}")
+    private String bucketName;
+
 
     private static final String RATING_SERVICE_URL = "http://RATING-SERVICE/ratings/users/";
 //    private static final String RATING_SERVICE_URL = "http://localhost:8083/ratings/users/";
@@ -170,6 +186,24 @@ public class UserServiceImpl implements UserService {
 
         log.info("Deleting user: {}", userId);
         userRepository.delete(user);
+    }
+
+    @Override
+    public void uploadFile(MultipartFile file) throws IOException {
+        s3Client.putObject(PutObjectRequest.builder()
+                .bucket(bucketName)
+                .key(file.getOriginalFilename())
+                .build(),
+                RequestBody.fromBytes(file.getBytes()));
+    }
+
+    @Override
+    public byte[] downloadFile(String key) {
+        ResponseBytes<GetObjectResponse> objectAsBytes = s3Client.getObjectAsBytes(GetObjectRequest.builder()
+                .bucket(bucketName)
+                .key(key)
+                .build());
+        return objectAsBytes.asByteArray();
     }
 
 }

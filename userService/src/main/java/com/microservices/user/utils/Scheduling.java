@@ -9,7 +9,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 @ConditionalOnProperty(name = "jobs.cleanup.enabled", havingValue = "true", matchIfMissing = true)
-public class CleanupService {
+public class Scheduling {
 
 // right now all scheduling is paused with config in yml file
 

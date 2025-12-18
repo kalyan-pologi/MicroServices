@@ -45,6 +45,14 @@ spring:
       max-lifetime: 1800000         # 30 mins, closes stale connections
       pool-name: MyHikariPool
 
+#cloud
+cloud.aws.credentials.access-key: ${AWS_ACCESS_KEY_ID}
+cloud.aws.credentials.secret-key: ${AWS_SECRET_ACCESS_KEY}
+
+cloud.aws.region.static: us-east-2
+aws.bucket.name: microservice0027
+
+
 # resilience4J configuration
 management:
   health:
@@ -158,6 +166,6 @@ jobs:
       probability: 1.0   # 100% sampling for local/dev (reduce in prod)
 
 ## Send traces to Zipkin
-#zipkin:
-#  tracing:
-#    endpoint: http://localhost:9411/api/v2/spans
+zipkin:
+  tracing:
+    endpoint: http://localhost:9411/api/v2/spans
