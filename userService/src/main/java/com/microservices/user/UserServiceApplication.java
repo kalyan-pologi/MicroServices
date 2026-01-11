@@ -1,6 +1,8 @@
 package com.microservices.user;
 
 import com.microservices.user.services.UserService;
+import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.security.Keys;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
@@ -11,6 +13,8 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.annotation.EnableScheduling;
+
+import java.util.Base64;
 //import org.springframework.cloud.netflix.eureka.EnableEurekaClient;
 
 @SpringBootApplication
@@ -30,8 +34,7 @@ public class UserServiceApplication {
 //		ConfigurableApplicationContext context = SpringApplication.run(UserServiceApplication.class, args);
 //		UserService service = context.getBean(UserService.class);
 //		System.out.println(service);
-
-
+//		byte[] key = Keys.secretKeyFor(SignatureAlgorithm.HS512).getEncoded();
+//		System.out.println(Base64.getEncoder().encodeToString(key));
 	}
-
 }

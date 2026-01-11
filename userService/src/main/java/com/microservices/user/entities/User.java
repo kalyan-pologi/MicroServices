@@ -3,6 +3,7 @@ package com.microservices.user.entities;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.Size;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -32,6 +33,7 @@ import java.util.Objects;
 public class User {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "user_id", length = 50, nullable = false)
     private String userId;
 
@@ -44,6 +46,11 @@ public class User {
     @NotBlank(message = "Email is mandatory")
     @Column(name = "email", nullable = false, unique = true, length = 100)
     private String email;
+
+    @NotEmpty(message = "password is required !!")
+    @Size(min = 4, max = 250, message = "min 4 and max 10 characters are allowed !!")
+    @Column(name = "password")
+    private String password;
 
     @Column(name = "about", length = 500)
     private String about;

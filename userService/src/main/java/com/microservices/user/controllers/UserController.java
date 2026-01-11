@@ -99,17 +99,17 @@ public class UserController {
         return ResponseEntity.noContent().build();
     }
 
-    @PostMapping("/s3/upload")
-    public ResponseEntity<String> s3UploadFile(@RequestParam("file") MultipartFile file) throws IOException {
-        userService.uploadFile(file);
-        return ResponseEntity.ok("File uploaded successfully");
-    }
-
-    @GetMapping("/s3/download/{filename}")
-    public ResponseEntity<byte[]> s3DownloadFile(@PathVariable String filename){
-        byte[] data = userService.downloadFile(filename);
-        return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + filename)
-                .body(data);
-    }
+//    @PostMapping("/s3/upload")
+//    public ResponseEntity<String> s3UploadFile(@RequestParam("file") MultipartFile file) throws IOException {
+//        userService.uploadFile(file);
+//        return ResponseEntity.ok("File uploaded successfully");
+//    }
+//
+//    @GetMapping("/s3/download/{filename}")
+//    public ResponseEntity<byte[]> s3DownloadFile(@PathVariable String filename){
+//        byte[] data = userService.downloadFile(filename);
+//        return ResponseEntity.ok()
+//                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + filename)
+//                .body(data);
+//    }
 }
