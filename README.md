@@ -49,11 +49,9 @@ Docker
 
 **Running the Application**
 
-# Config Server
 cd config-server
 mvn spring-boot:run
 
-# Eureka Server
 cd service-registry
 mvn spring-boot:run
 
